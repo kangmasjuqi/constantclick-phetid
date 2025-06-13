@@ -4,6 +4,8 @@ import Home from '../views/Home.vue';
 import Login from '../views/Auth/Login.vue';
 import Register from '../views/Auth/Register.vue';
 import Dashboard from '../views/Dashboard.vue';
+import AddTest from '../views/AddTest.vue';
+import MarkerTrends from '../views/MarkerTrends.vue';
 import { useAuthStore } from '../stores/auth'; // Import auth store for navigation guards
 
 const routes = [
@@ -31,7 +33,25 @@ const routes = [
         component: Dashboard,
         meta: { requiresAuth: true } // Requires user to be logged in
     },
-    // Add more routes as you build features (e.g., /add-test, /marker-trends)
+    {
+        path: '/add-test',
+        name: 'AddTest',
+        component: AddTest,
+        meta: { requiresAuth: true } // Requires user to be logged in
+    },
+    {
+        path: '/trends',
+        name: 'MarkerTrendsOverview',
+        component: MarkerTrends,
+        meta: { requiresAuth: true }
+    },
+    {
+        path: '/trends/:markerId',
+        name: 'MarkerSpecificTrend',
+        component: MarkerTrends, // Use the same component, will adapt based on prop
+        props: true, // Allow markerId from route params to be passed as a prop
+        meta: { requiresAuth: true }
+    }
 ];
 
 const router = createRouter({

@@ -1,9 +1,12 @@
 <?php
+// app/Http/Resources/UserMarkerValueResource.php
 
 namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use App\Http\Resources\UserTestEntryResource; 
+use App\Http\Resources\MarkerResource;
 
 class UserMarkerValueResource extends JsonResource
 {
@@ -16,12 +19,13 @@ class UserMarkerValueResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'value' => $this->value, // Casts will handle decimal formatting
+            'value' => $this->value,
             'marker_id' => $this->marker_id,
-            // Clever: Conditionally load marker details if eager loaded, for a single API call benefit
             'marker' => MarkerResource::make($this->whenLoaded('marker')),
-            // 'created_at' => $this->created_at?->toDateTimeString(),
-            // 'updated_at' => $this->updated_at?->toDateTimeString(),
+            'user_test_entry_id' => $this->user_test_entry_id, // Add this for clarity if not already
+            'user_test_entry' => UserTestEntryResource::make($this->whenLoaded('userTestEntry')),
+            // 'created_at' => $this->created_at?->toDateTimeString(), // Optional
+            // 'updated_at' => $this->updated_at?->toDateTimeString(), // Optional
         ];
     }
 }

@@ -85,7 +85,7 @@ class FortifyServiceProvider extends ServiceProvider
 
         // 5. Configure Password Updates
         // --- CHANGE THIS LINE: ---
-        Fortify::updateUserPasswordsUsing(UpdateUserPassword::class); // <--- Pass the class name as a string
+        Fortify::updateUserPasswordsUsing(UpdateUserPassword::class);
         // --- Instead of:
         // Fortify::updateUserPasswordsUsing(function (User $user, string $password) {
         //     $user->forceFill([
