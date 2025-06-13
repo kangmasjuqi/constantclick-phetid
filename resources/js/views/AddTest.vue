@@ -4,6 +4,8 @@
             <div class="text-xl font-bold text-gray-800">PHET-ID</div>
             <div>
                 <router-link :to="{ name: 'Dashboard' }" class="text-blue-500 hover:text-blue-700 mr-4">Dashboard</router-link>
+                <router-link :to="{ name: 'AddTest' }" class="text-blue-500 hover:text-blue-700 mr-4">Add New Test</router-link>
+                <router-link :to="{ name: 'MarkerTrendsOverview' }" class="text-blue-500 hover:text-blue-700 mr-4">View Trends</router-link> 
                 <span v-if="authStore.currentUser" class="text-gray-700 mr-4">Welcome, {{ authStore.currentUser.name }}</span>
                 <button
                     @click="authStore.logout()"

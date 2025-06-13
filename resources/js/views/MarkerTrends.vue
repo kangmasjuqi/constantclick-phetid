@@ -5,6 +5,7 @@
             <div>
                 <router-link :to="{ name: 'Dashboard' }" class="text-blue-500 hover:text-blue-700 mr-4">Dashboard</router-link>
                 <router-link :to="{ name: 'AddTest' }" class="text-blue-500 hover:text-blue-700 mr-4">Add New Test</router-link>
+                <router-link :to="{ name: 'MarkerTrendsOverview' }" class="text-blue-500 hover:text-blue-700 mr-4">View Trends</router-link> 
                 <span v-if="authStore.currentUser" class="text-gray-700 mr-4">Welcome, {{ authStore.currentUser.name }}</span>
                 <button
                     @click="authStore.logout()"
@@ -89,9 +90,9 @@ import {
     Title,
     Tooltip,
     Legend,
-    LineController // Ensure LineController is imported
+    LineController
 } from 'chart.js';
-import { LineChart } from 'vue-chart-3'; // Ensure LineChart is imported
+import { LineChart } from 'vue-chart-3';
 
 // Register Chart.js components
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, LineController);
@@ -123,7 +124,7 @@ watch(selectedMarkerId, async (newMarkerId) => {
     }
 });
 
-// Watch route params for markerId changes (e.g., if navigating /trends/1 to /trends/2)
+// Watch route params for markerId changes
 watch(() => route.params.markerId, (newMarkerId) => {
     selectedMarkerId.value = newMarkerId || '';
 });
@@ -133,66 +134,104 @@ const selectedMarker = computed(() => {
     if (!testDataStore.allMarkers || testDataStore.allMarkers.length === 0) {
         return null;
     }
-    return testDataStore.allMarkers.find(m => m.id === selectedMarkerId.value);
+    return testDataStore.allMarkers.find(m => m.id == selectedMarkerId.value); // Use == for type coercion
 });
 
 // Function to fetch data for the selected marker
 const fetchMarkerData = async (markerId) => {
     try {
-        // --- FIX START ---
-        // testDataStore.fetchUserMarkerValuesByMarker already returns the data array
-        const rawData = await testDataStore.fetchUserMarkerValuesByMarker(markerId);
+        console.log('Fetching data for marker ID:', markerId); // Debug log
         
-        // Ensure rawData is an array before filtering/sorting, default to empty array
-        const dataToProcess = Array.isArray(rawData) ? rawData : []; 
-
-        // Filter out any entries that might be missing user_test_entry or test_date
-        // then sort them correctly.
-        const filteredAndSortedData = dataToProcess
-            .filter(d => d.user_test_entry && d.user_test_entry.test_date)
-            .sort((a, b) => {
-                const dateA = new Date(a.user_test_entry.test_date).getTime();
-                const dateB = new Date(b.user_test_entry.test_date).getTime();
+        // Fetch raw response from store
+        const rawResponse = await testDataStore.fetchUserMarkerValuesByMarker(markerId);
+        console.log('Raw API response:', rawResponse); // Debug log
+        
+        // Extract the actual data array from the response
+        // Handle both direct array and wrapped { data: [...] } responses
+        let dataArray;
+        if (Array.isArray(rawResponse)) {
+            dataArray = rawResponse;
+        } else if (rawResponse && Array.isArray(rawResponse.data)) {
+            dataArray = rawResponse.data; // Extract from { data: [...] } wrapper
+        } else {
+            console.warn('Unexpected API response structure:', rawResponse);
+            dataArray = [];
+        }
+        
+        console.log('Extracted data array:', dataArray); // Debug log
+        
+        // Validate and process the data
+        const validData = dataArray
+            .filter(item => {
+                // More robust validation
+                const hasValidEntry = item && 
+                    item.user_test_entry && 
+                    item.user_test_entry.test_date &&
+                    item.value !== null && 
+                    item.value !== undefined;
                 
-                // Handle invalid dates (which result in NaN from getTime())
-                if (isNaN(dateA) || isNaN(dateB)) {
-                    console.warn('Invalid date found during sorting:', a, b);
-                    return 0; // Don't sort these, they should ideally be filtered out
+                if (!hasValidEntry) {
+                    console.warn('Invalid data item filtered out:', item);
                 }
-                return dateA - dateB;
+                return hasValidEntry;
+            })
+            .sort((a, b) => {
+                const dateA = new Date(a.user_test_entry.test_date);
+                const dateB = new Date(b.user_test_entry.test_date);
+                
+                if (isNaN(dateA.getTime()) || isNaN(dateB.getTime())) {
+                    console.warn('Invalid date found during sorting:', a, b);
+                    return 0;
+                }
+                return dateA.getTime() - dateB.getTime();
             });
 
-        markerData.value = filteredAndSortedData;
-        // --- FIX END ---
-
-        generateInsights();
+        console.log('Processed valid data:', validData); // Debug log
+        
+        markerData.value = validData;
+        
+        // Generate insights after setting data
+        if (validData.length > 0) {
+            generateInsights();
+        } else {
+            insights.value = { message: 'No valid data points found.', recommendations: [] };
+        }
+        
     } catch (error) {
         console.error("Failed to fetch marker data:", error);
         markerData.value = [];
-        insights.value = { message: '', recommendations: [] };
+        insights.value = { message: 'Error loading data.', recommendations: [] };
     }
 };
 
-// Handle marker selection change (redirect to update URL for shareability)
+// Handle marker selection change
 const handleMarkerChange = () => {
     if (selectedMarkerId.value) {
         router.push({ name: 'MarkerSpecificTrend', params: { markerId: selectedMarkerId.value } });
     } else {
-        router.push({ name: 'MarkerTrendsOverview' }); // Go back to overview without ID
+        router.push({ name: 'MarkerTrendsOverview' });
     }
 };
 
-
 // Prepare data for Chart.js
 const chartData = computed(() => {
-    // Also add a check for !selectedMarker.value.name, as it could be null if the marker hasn't loaded fully
-    if (!selectedMarker.value || markerData.value.length === 0 || !selectedMarker.value.name) {
+    console.log('Computing chart data. Selected marker:', selectedMarker.value); // Debug log
+    console.log('Marker data length:', markerData.value.length); // Debug log
+    
+    if (!selectedMarker.value || markerData.value.length === 0) {
+        console.log('No marker selected or no data available'); // Debug log
         return { labels: [], datasets: [] };
     }
 
-    // Use optional chaining for safety just in case
-    const labels = markerData.value.map(d => d.user_test_entry?.test_date || 'N/A');
-    const values = markerData.value.map(d => parseFloat(d.value)); // Ensure values are numbers for charting
+    const labels = markerData.value.map(d => {
+        const date = new Date(d.user_test_entry.test_date);
+        return date.toLocaleDateString(); // Format date nicely
+    });
+    
+    const values = markerData.value.map(d => parseFloat(d.value));
+    
+    console.log('Chart labels:', labels); // Debug log
+    console.log('Chart values:', values); // Debug log
 
     const datasets = [
         {
@@ -200,28 +239,29 @@ const chartData = computed(() => {
             data: values,
             borderColor: 'rgb(75, 192, 192)',
             backgroundColor: 'rgba(75, 192, 192, 0.2)',
-            tension: 0.2, // Smooth lines
+            tension: 0.2,
             fill: false,
         }
     ];
 
     // Add healthy range lines if available
-    if (selectedMarker.value.healthy_min !== null) {
+    if (selectedMarker.value.healthy_min !== null && selectedMarker.value.healthy_min !== undefined) {
         datasets.push({
             label: 'Healthy Min',
-            data: labels.map(() => parseFloat(selectedMarker.value.healthy_min)), // Ensure number
-            borderColor: 'rgb(0, 128, 0)', // Green
-            borderDash: [5, 5], // Dashed line
-            pointStyle: false, // No points for this line
+            data: labels.map(() => parseFloat(selectedMarker.value.healthy_min)),
+            borderColor: 'rgb(0, 128, 0)',
+            borderDash: [5, 5],
+            pointStyle: false,
             fill: false,
             tension: 0,
         });
     }
-    if (selectedMarker.value.healthy_max !== null) {
+    
+    if (selectedMarker.value.healthy_max !== null && selectedMarker.value.healthy_max !== undefined) {
         datasets.push({
             label: 'Healthy Max',
-            data: labels.map(() => parseFloat(selectedMarker.value.healthy_max)), // Ensure number
-            borderColor: 'rgb(255, 99, 132)', // Red
+            data: labels.map(() => parseFloat(selectedMarker.value.healthy_max)),
+            borderColor: 'rgb(255, 99, 132)',
             borderDash: [5, 5],
             pointStyle: false,
             fill: false,
@@ -236,7 +276,7 @@ const chartData = computed(() => {
 });
 
 // Chart.js options
-const chartOptions = computed(() => ({ // Use computed property for options if they depend on reactive data
+const chartOptions = computed(() => ({
     responsive: true,
     maintainAspectRatio: false,
     scales: {
@@ -245,7 +285,7 @@ const chartOptions = computed(() => ({ // Use computed property for options if t
                 display: true,
                 text: selectedMarker.value ? `Value (${selectedMarker.value.unit})` : 'Value',
             },
-            beginAtZero: false, // Often good for health data to not start at 0 if ranges are high
+            beginAtZero: false,
         },
         x: {
             title: {
@@ -259,41 +299,31 @@ const chartOptions = computed(() => ({ // Use computed property for options if t
             mode: 'index',
             intersect: false,
         },
-        // Optional: Add a title plugin if desired
-        // title: {
-        //   display: true,
-        //   text: selectedMarker.value ? `${selectedMarker.value.name} Trend` : 'Marker Trend'
-        // }
     },
 }));
 
-
-// --- Basic Insights Logic ---
+// Generate insights based on marker data
 const generateInsights = () => {
     const marker = selectedMarker.value;
     const data = markerData.value;
-    // Ensure latestValue is a number for comparisons
-    const latestValue = data.length > 0 ? parseFloat(data[data.length - 1].value) : null;
-
-    insights.value = { message: '', recommendations: [] }; // Reset insights
-
-    if (!marker || data.length === 0 || latestValue === null) {
-        insights.value.message = 'No data to generate insights.';
+    
+    if (!marker || data.length === 0) {
+        insights.value = { message: 'No data available for insights.', recommendations: [] };
         return;
     }
-
+    
+    const latestValue = parseFloat(data[data.length - 1].value);
+    const min = parseFloat(marker.healthy_min);
+    const max = parseFloat(marker.healthy_max);
+    
     let status = 'Your recent results are generally within the healthy range.';
     const recommendations = [];
 
-    // Ensure min/max are numbers for comparison
-    const min = parseFloat(marker.healthy_min);
-    const max = parseFloat(marker.healthy_max);
-
     // Check latest value against healthy range
-    if (min !== null && latestValue < min) {
+    if (!isNaN(min) && latestValue < min) {
         status = `Your latest ${marker.name} level (${latestValue} ${marker.unit}) is below the healthy minimum (${min} ${marker.unit}).`;
         recommendations.push(`Consider discussing with your doctor if this persists.`);
-    } else if (max !== null && latestValue > max) {
+    } else if (!isNaN(max) && latestValue > max) {
         status = `Your latest ${marker.name} level (${latestValue} ${marker.unit}) is above the healthy maximum (${max} ${marker.unit}).`;
         recommendations.push(`It's advisable to discuss this with your doctor.`);
     }
@@ -301,16 +331,14 @@ const generateInsights = () => {
     // Simple trend analysis (requires at least 3 data points)
     if (data.length >= 3) {
         const lastThree = data.slice(-3);
-        // Ensure values are numbers for comparison
         const [val1, val2, val3] = lastThree.map(d => parseFloat(d.value));
 
-        // Use more robust trend detection: check for consistent direction and significant change
-        const trendThreshold = (max !== null && min !== null) ? (max - min) * 0.1 : 5; // 10% of range or fixed value
+        const trendThreshold = (!isNaN(max) && !isNaN(min)) ? (max - min) * 0.1 : 5;
 
-        if (val1 < val2 && val2 < val3 && (val3 - val1 > trendThreshold)) { // Significant upward trend
+        if (val1 < val2 && val2 < val3 && (val3 - val1 > trendThreshold)) {
             status += ` There's a noticeable upward trend over your last few tests.`;
             recommendations.push(`Monitor this trend closely and consider lifestyle adjustments.`);
-        } else if (val1 > val2 && val2 > val3 && (val1 - val3 > trendThreshold)) { // Significant downward trend
+        } else if (val1 > val2 && val2 > val3 && (val1 - val3 > trendThreshold)) {
             status += ` There's a noticeable downward trend over your last few tests.`;
             recommendations.push(`Monitor this trend closely and consider lifestyle adjustments.`);
         }
