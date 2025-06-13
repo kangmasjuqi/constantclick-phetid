@@ -10,6 +10,17 @@ PHET-ID is a comprehensive web application designed to simplify blood test track
 - **Encourage** regular health monitoring (2-3 times yearly)
 - **Provide** early health insights through trend analysis
 
+## 🚀 (Screenshots) Key Features
+![Screen Shot 2025-06-13 at 10 10 45](https://github.com/user-attachments/assets/66c59ed2-23ff-4d60-ac62-80a33c571c2b)
+![Screen Shot 2025-06-13 at 10 10 54](https://github.com/user-attachments/assets/4230dc35-3a86-40b2-8974-e2528cc53fca)
+
+![Screen Shot 2025-06-13 at 10 06 38](https://github.com/user-attachments/assets/aa2b6c2d-b846-4282-ad4c-7c3852b770bd)
+![Screen Shot 2025-06-13 at 10 06 47](https://github.com/user-attachments/assets/31594cec-22bc-4fe7-83f5-a34457f8ca15)
+![Screen Shot 2025-06-13 at 10 07 05](https://github.com/user-attachments/assets/9fceb061-a416-4fa3-94d7-c8629d09624c)
+![Screen Shot 2025-06-13 at 10 08 19](https://github.com/user-attachments/assets/5592d55a-2409-4ebe-83ed-879f1de0e661)
+![Screen Shot 2025-06-13 at 10 09 09](https://github.com/user-attachments/assets/ce86deef-f9ad-40fb-ab10-44c7e036cbec)
+
+
 ## 🚀 Key Features
 
 ### 📊 Health Dashboard
