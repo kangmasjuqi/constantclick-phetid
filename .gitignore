@@ -1,0 +1,146 @@
+# Laravel specific
+/vendor/
+/node_modules/
+/public/hot
+/public/storage
+/storage/*.key
+/storage/app/public/*
+!/storage/app/public/.gitkeep
+/storage/framework/cache/data/*
+!/storage/framework/cache/data/.gitkeep
+/storage/framework/sessions/*
+!/storage/framework/sessions/.gitkeep
+/storage/framework/testing/*
+!/storage/framework/testing/.gitkeep
+/storage/framework/views/*
+!/storage/framework/views/.gitkeep
+/storage/logs/*
+!/storage/logs/.gitkeep
+.env
+.env.backup
+.env.production
+.phpunit.result.cache
+Homestead.json
+Homestead.yaml
+auth.json
+npm-debug.log
+yarn-error.log
+
+# Vue.js / Frontend specific
+/public/build/
+/public/js/
+/public/css/
+/public/mix-manifest.json
+dist/
+build/
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# IDE and Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# PHP specific
+*.log
+.phpunit.result.cache
+/phpunit.xml
+
+# Composer
+/vendor/
+composer.phar
+composer.lock
+
+# Laravel specific files
+/.vagrant
+/bootstrap/compiled.php
+/app/storage/
+/bootstrap/cache/
+/storage/debugbar/
+
+# Laravel Mix / Vite
+/public/hot
+/public/build
+/public/storage
+
+# Testing
+/coverage/
+/.phpunit.cache
+/tests/Feature/screenshots/
+/tests/Browser/screenshots/
+/tests/Browser/console/
+
+# Backup files
+*.bak
+*.backup
+*.old
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Log files
+*.log
+logs/
+
+# Database
+*.sqlite
+*.sqlite3
+database.sqlite
+
+# Cache
+bootstrap/cache/
+storage/framework/cache/
+
+# Sessions
+storage/framework/sessions/
+
+# Views cache
+storage/framework/views/
+
+# Configuration cache
+bootstrap/cache/config.php
+bootstrap/cache/packages.php
+bootstrap/cache/routes-v7.php
+bootstrap/cache/services.php
+
+# Application key
+.env.key
+
+# Laravel Telescope (if using)
+/storage/telescope/
+
+# Laravel Horizon (if using)
+/storage/horizon/
+
+# Laravel Nova (if using)
+/nova/
+
+# Docker
+docker-compose.override.yml
+.docker/
+
+# Deployment
+/deployment/
+.deploy/
